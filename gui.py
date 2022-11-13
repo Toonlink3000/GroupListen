@@ -13,20 +13,21 @@ class Window(Tk):
         Tk.__init__(self)
 
         self.title("Group Listen")
-        self.geometry("640x480")
+        self.geometry("640x150")
 
 #        windll.shcore.SetProcessDpiAwareness(1)
         
-        top_bar = TopBar(self)
-        top_bar.grid(sticky="ew")
+        self.top_bar = TopBar(self)
+        self.top_bar.grid(sticky="ew")
 
-        main_app = MainApp(self)
-        main_app.grid(row=1, sticky="ew")
+        self.main_app = MainApp(self)
+        self.main_app.grid(row=1, sticky="ew")
         self.grid_columnconfigure(0, weight=1)
 
     def run_app(self):
         self.mainloop()
-        
+        del self.main_app
+
 class TopBar(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
@@ -43,7 +44,7 @@ class MainApp(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
 
-        duplicating = False
+        self.duplicating = False
 
         self.all_devices = sd.query_devices()
         self.all_device_names = []
@@ -60,25 +61,34 @@ class MainApp(Frame):
         self.draw_device_properties()
         self.draw_start_stopper()
 
+    def function():
+        if self.sound_duplicator != None:
+            del self.sound_duplicator
+
+    def error_callback(self, traceback):
+        messagebox.showerror("ERROR TRACEBACK: {0}", traceback)
+        self.stop()
+
     def start(self):
-        duplicating = True
+        self.duplicating = True
         
         self.refresh_device_switcher()
         self.refresh_start_stopper()
         self.refresh_input_device_chooser()
 
-        self.sound_duplicator = glist.SoundDuplicator(self.input_device, tuple(self.output_devices))
+        self.sound_duplicator = glist.SoundDuplicator(self.input_device, tuple(self.output_devices), self.error_callback)
         self.sound_duplicator.start_duplication()
         
         
     def stop(self):
-        duplicating = False
+        self.duplicating = False
         
         self.refresh_device_switcher()
         self.refresh_start_stopper()
         self.refresh_input_device_chooser()
 
         self.sound_duplicator.kill_threads()
+        del self.sound_duplicator
 
     def add_device(self):
         if len(self.output_devices) < 5:
@@ -198,6 +208,14 @@ class MainApp(Frame):
 
         start_button = ttk.Button(self.start_stopper, text="Start", command=self.start)
         stop_button = ttk.Button(self.start_stopper, text="Stop", command=self.stop)
+
+        if self.duplicating == True:
+            start_button["state"] = DISABLED
+            stop_button["state"] = NORMAL
+        else:
+            start_button["state"] = NORMAL
+            stop_button["state"] = DISABLED
+
 
         start_button.grid(column=1, row=0, sticky="e")
         stop_button.grid(column=2, row=0, sticky="w")
