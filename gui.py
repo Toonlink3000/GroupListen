@@ -4,6 +4,7 @@ from tkinter import messagebox
 # from ctypes import windll
 import sounddevice as sd
 import glist
+from menu import MainMenuBar
 
 DEVICE_LIMIT = 5
 
@@ -24,9 +25,11 @@ class Window(Tk):
         self.main_app.grid(row=1, sticky="ew")
         self.grid_columnconfigure(0, weight=1)
 
+        menu_bar = MainMenuBar(self, self.main_app)
+        self.config(menu=menu_bar)
+
     def run_app(self):
         self.mainloop()
-        del self.main_app
 
 class TopBar(Frame):
     def __init__(self, parent):
@@ -36,16 +39,21 @@ class TopBar(Frame):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-class Device():
-    def __init__(self, device_id:int):
-        self.device_id = device_id
-
 class MainApp(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
 
         self.duplicating = False
 
+        self.init_devices()
+
+        self.draw_input_device_chooser()
+        self.draw_device_switcher()
+        self.draw_device_properties()
+        self.draw_start_stopper()
+
+    # Clear device list and input device
+    def init_devices(self):
         self.all_devices = sd.query_devices()
         self.all_device_names = []
         for i in self.all_devices:
@@ -54,21 +62,18 @@ class MainApp(Frame):
         self.input_device = -1
 
         self.selected_device = 0
+        try:
+            del self.output_devices
+        except:
+            pass
         self.output_devices = [-1]
 
-        self.draw_input_device_chooser()
-        self.draw_device_switcher()
-        self.draw_device_properties()
-        self.draw_start_stopper()
-
-    def function():
-        if self.sound_duplicator != None:
-            del self.sound_duplicator
-
+    # Called there is an error while duplicating audio
     def error_callback(self, traceback):
-        messagebox.showerror("ERROR TRACEBACK: {0}", traceback)
+        messagebox.showerror("ERROR", "TRACEBACK: {0}".format(traceback))
         self.stop()
 
+    # Called when start button pressed
     def start(self):
         self.duplicating = True
         
@@ -79,7 +84,7 @@ class MainApp(Frame):
         self.sound_duplicator = glist.SoundDuplicator(self.input_device, tuple(self.output_devices), self.error_callback)
         self.sound_duplicator.start_duplication()
         
-        
+    # Called when stop button pressed
     def stop(self):
         self.duplicating = False
         
@@ -90,6 +95,7 @@ class MainApp(Frame):
         self.sound_duplicator.kill_threads()
         del self.sound_duplicator
 
+    # Called when - button pressed
     def add_device(self):
         if len(self.output_devices) < 5:
             self.output_devices.append(-1)
@@ -98,7 +104,7 @@ class MainApp(Frame):
 
         else:
             messagebox.showerror("Error", "You have reached the device limit.")
-
+    # Called when + button pressed
     def remove_device(self):
         if len(self.output_devices) != 1:
             del self.output_devices[self.selected_device]
@@ -107,19 +113,21 @@ class MainApp(Frame):
 
         else:
             messagebox.showerror("Error", "There is only 1 device left, this is the minimum")
-        
-
+    
+    # Called when > button pressed
     def next_device(self):
         self.selected_device += 1
         self.refresh_device_switcher()
         self.refresh_device_properties()
 
-
+    # Called when < button pressed
     def previous_device(self):
         self.selected_device -= 1
         self.refresh_device_switcher()
         self.refresh_device_properties()
 
+    # frame with navigation buttons (<>)
+    # TODO: Split into own class
     def refresh_device_switcher(self):
         self.remove_device_switcher()
         self.draw_device_switcher()
@@ -253,7 +261,6 @@ class MainApp(Frame):
         self.input_dev_chooser_frame.grid_columnconfigure(1, weight=1)
 
         self.input_dev_chooser_frame.grid(row=0, column=0, sticky="ew")
-        
 
 if __name__ == "__main__":
     root = Window()
