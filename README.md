@@ -1,4 +1,4 @@
-![Alt text](./GroupListenIcon.png "Grouplisten icon") {width:200px, height:200px}
+[<img src="./GroupListenIcon.png" width="200" height="200" />](./GroupListenIcon.png)
 # GroupListen
 Divert audio from one audio device to another on multiple devices at the same time.
 ## How to run
