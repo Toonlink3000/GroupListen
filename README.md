@@ -1,4 +1,4 @@
-![Alt text](./GroupListenIcon.png "Grouplisten icon") 
+![Alt text](./GroupListenIcon.png =200x200 "Grouplisten icon") 
 # GroupListen
 Divert audio from one audio device to another on multiple devices at the same time.
 ## How to run
